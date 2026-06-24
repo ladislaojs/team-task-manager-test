@@ -2,9 +2,6 @@ package model
 
 import "time"
 
-type TaskID uint64
-type TaskHistoryId uint64
-
 type TaskStatus string
 
 const (
@@ -14,22 +11,38 @@ const (
 )
 
 type Task struct {
-	ID          TaskID
-	TeamID      TeamID
+	ID          uint64
+	TeamID      uint64
 	Title       string
 	Description string
-	AssigneeID  UserID
-	DueDate     time.Time
+	AssigneeID  *uint64
+	DueDate     *time.Time
 	Status      TaskStatus
-	CreatedBy   UserID
+	CreatedBy   uint64
+	CreatedAt   time.Time
+}
+
+type TaskFilter struct {
+	TeamID     uint64
+	Status     *TaskStatus
+	AssigneeID *uint64
+	Page       int
+	PageSize   int
 }
 
 type TaskHistory struct {
-	ID        TaskHistoryId
-	TaskID    TaskID
+	ID        uint64
+	TaskID    uint64
 	Field     string
 	OldValue  string
 	NewValue  string
 	ChangedAt time.Time
-	ChangedBy UserID
+	ChangedBy uint64
+}
+
+type OtherTeamAssigneeTask struct {
+	TaskID     uint64
+	TeamID     uint64
+	AssigneeID uint64
+	Title      string
 }

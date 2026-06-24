@@ -1,7 +1,5 @@
 package model
 
-type TeamID string
-
 type TeamRole string
 
 const (
@@ -14,14 +12,25 @@ func (r TeamRole) CanInvite() bool {
 	return r == TeamRoleOwner || r == TeamRoleAdmin
 }
 
+func (r TeamRole) CanUpdate() bool {
+	return r == TeamRoleOwner || r == TeamRoleAdmin
+}
+
 type Team struct {
-	ID        TeamID
+	ID        uint64
 	Name      string
 	CreatedBy uint64
 }
 
+type TeamExtended struct {
+	ID                    uint64
+	Name                  string
+	MemberCount           int
+	LastWeekDoneTaskCount int
+}
+
 type TeamMember struct {
-	UserID UserID
-	TeamID TeamID
+	UserID uint64
+	TeamID uint64
 	Role   TeamRole
 }

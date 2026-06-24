@@ -14,9 +14,10 @@ type InviteRequest struct {
 }
 
 type TeamExtendedResponse struct {
-	TeamResponse
-	MemberCount           int `json:"member_count"`
-	LastWeekDoneTaskCount int `json:"last_week_done_task_count"`
+	ID                    uint64 `json:"id"`
+	Name                  string `json:"name"`
+	MemberCount           int    `json:"member_count"`
+	LastWeekDoneTaskCount int    `json:"last_week_done_task_count"`
 }
 
 type TopTaskCreatorResponse struct {

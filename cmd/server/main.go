@@ -4,16 +4,21 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strconv"
 
 	app "github.com/ladislaojs/team-task-manager-test/internal/http"
 	"github.com/ladislaojs/team-task-manager-test/internal/http/handler"
 	mysqlrepo "github.com/ladislaojs/team-task-manager-test/internal/repository/mysql"
 	"github.com/ladislaojs/team-task-manager-test/internal/service"
+	"github.com/ladislaojs/team-task-manager-test/pkg/cache"
 	"github.com/ladislaojs/team-task-manager-test/pkg/mysql"
 )
 
 func main() {
-	// TODO: JWT Secret
+	jwtSecret := os.Getenv("JWT_SECRET")
+	if jwtSecret == "" {
+		log.Fatal("JWT_SECRET env variable is required")
+	}
 
 	db, err := mysql.Connect(mysql.Config{
 		Host:     os.Getenv("MYSQL_HOST"),
@@ -31,15 +36,32 @@ func main() {
 	teamRepository := mysqlrepo.NewTeamRepository(db)
 	taskRepository := mysqlrepo.NewTaskRepository(db)
 
-	userService := service.NewUserService(userRepository)
-	teamService := service.NewTeamService(teamRepository)
+	userService := service.NewUserService(userRepository, jwtSecret)
+	teamService := service.NewTeamService(teamRepository, userRepository)
 	taskService := service.NewTaskService(taskRepository)
 
 	userHandler := handler.NewUserHandler(userService)
 	teamHandler := handler.NewTeamHandler(teamService)
 	taskHandler := handler.NewTaskHandler(taskService)
 
+	redisClient, err := cache.NewRedisClient(cache.Config{
+		Addr:     os.Getenv("REDIS_ADDR"),
+		Password: os.Getenv("REDIS_PASSWORD"),
+		DB:       os.Getenv("REDIS_DB"),
+	})
+	if err != nil {
+		log.Fatalf("redis connection failed: %v", err)
+	}
+
+	maxRequestsPerMinute, err := strconv.Atoi(os.Getenv("MAX_REQUESTS_PER_MINUTE"))
+	if err != nil {
+		maxRequestsPerMinute = 0
+	}
+
 	router := app.NewRouter(
+		jwtSecret,
+		redisClient,
+		maxRequestsPerMinute,
 		userHandler,
 		teamHandler,
 		taskHandler,
