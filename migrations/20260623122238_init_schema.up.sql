@@ -71,4 +71,10 @@ CREATE TABLE task_comments (
     CONSTRAINT fk_task_comments_user FOREIGN KEY (user_id) REFERENCES users (id)
 );
 
--- TODO: add indexes
+CREATE INDEX idx_tasks_team_id    ON tasks (team_id);
+CREATE INDEX idx_tasks_assignee_id ON tasks (assignee_id);
+CREATE INDEX idx_tasks_status     ON tasks (status);
+CREATE INDEX idx_tasks_created_by ON tasks (created_by);
+CREATE INDEX idx_tasks_created_at ON tasks (created_at);
+CREATE INDEX idx_team_members_user_id ON team_members (user_id);
+CREATE INDEX idx_task_history_task_id ON task_history (task_id);

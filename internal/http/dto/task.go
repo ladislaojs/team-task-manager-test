@@ -23,11 +23,11 @@ type TaskResponse struct {
 }
 
 type UpdateTaskRequest struct {
-	Title       string `json:"title"`
-	Description string `json:"description"`
-	Status      string `json:"status"`
-	AssigneeID  uint64 `json:"assignee_id"`
-	DueDate     string `json:"due_date"`
+	Title       *string `json:"title"`
+	Description *string `json:"description"`
+	Status      *string `json:"status"`
+	AssigneeID  *uint64 `json:"assignee_id"`
+	DueDate     *string `json:"due_date"`
 }
 
 type TaskHistoryResponse struct {
@@ -35,8 +35,8 @@ type TaskHistoryResponse struct {
 	TaskID    uint64    `json:"task_id"`
 	ChangedBy uint64    `json:"changed_by"`
 	Field     string    `json:"field"`
-	OldValue  string    `json:"old_value"`
-	NewValue  string    `json:"new_value"`
+	OldValue  *string   `json:"old_value"`
+	NewValue  *string   `json:"new_value"`
 	ChangedAt time.Time `json:"changed_at"`
 }
 

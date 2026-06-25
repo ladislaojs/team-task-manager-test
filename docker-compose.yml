@@ -27,8 +27,6 @@ services:
     depends_on:
       mysql:
         condition: service_healthy
-    profiles:
-      - migrate
 
   mysql:
     image: mysql:8.4
@@ -42,7 +40,7 @@ services:
     volumes:
       - mysql_data:/var/lib/mysql
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD}"]
+      test: ["CMD-SHELL", "MYSQL_PWD=$${MYSQL_ROOT_PASSWORD} mysqladmin ping -h 127.0.0.1 -u root"]
       interval: 5s
       timeout: 5s
       retries: 10

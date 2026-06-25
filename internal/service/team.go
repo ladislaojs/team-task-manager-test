@@ -3,7 +3,9 @@ package service
 import (
 	"context"
 	"errors"
+	"log"
 
+	"github.com/ladislaojs/team-task-manager-test/internal/http/email"
 	"github.com/ladislaojs/team-task-manager-test/internal/model"
 	"github.com/ladislaojs/team-task-manager-test/internal/repository"
 )
@@ -16,12 +18,13 @@ var (
 )
 
 type TeamService struct {
-	teams repository.TeamRepository
-	users repository.UserRepository
+	teams  repository.TeamRepository
+	users  repository.UserRepository
+	mailer email.Mailer
 }
 
-func NewTeamService(teams repository.TeamRepository, users repository.UserRepository) *TeamService {
-	return &TeamService{teams: teams, users: users}
+func NewTeamService(teams repository.TeamRepository, users repository.UserRepository, mailer email.Mailer) *TeamService {
+	return &TeamService{teams: teams, users: users, mailer: mailer}
 }
 
 func (s *TeamService) Create(ctx context.Context, creatorID uint64, name string) (*model.Team, error) {
@@ -89,10 +92,10 @@ func (s *TeamService) Invite(ctx context.Context, inviterID, teamID, inviteeID u
 		return err
 	}
 
-	// team, err := s.teams.FindByID(ctx, teamID)
-	// if emailErr := s.mailer.SendInvitation(ctx, invitee.Email, team.Name); emailErr != nil {
-	// 	log.Printf("[team-service] invite email failed (user %d): %v", inviteeID, emailErr)
-	// }
+	team, err := s.teams.FindByID(ctx, teamID)
+	if emailErr := s.mailer.SendInvitation(ctx, invitee.Email, team.Name); emailErr != nil {
+		log.Printf("[team-service] invite email failed (user %d): %v", inviteeID, emailErr)
+	}
 
 	return nil
 }

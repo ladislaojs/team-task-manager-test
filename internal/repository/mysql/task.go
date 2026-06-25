@@ -21,7 +21,7 @@ func NewTaskRepository(db *sql.DB) *TaskRepository {
 func (r *TaskRepository) Create(ctx context.Context, task *model.Task) error {
 	query := `
 		INSERT INTO tasks (team_id, assignee_id, created_by, title, description, status, due_date)
-		VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
+		VALUES (?, ?, ?, ?, ?, ?, ?)`
 
 	res, err := r.db.ExecContext(ctx, query,
 		task.TeamID, task.AssigneeID, task.CreatedBy,
@@ -71,7 +71,7 @@ func (r *TaskRepository) List(ctx context.Context, filter model.TaskFilter) ([]*
 		args = append(args, *filter.Status)
 	}
 	if filter.AssigneeID != nil {
-		where = append(where, "assigned_to = ?")
+		where = append(where, "assignee_id = ?")
 		args = append(args, *filter.AssigneeID)
 	}
 
@@ -109,7 +109,7 @@ func (r *TaskRepository) List(ctx context.Context, filter model.TaskFilter) ([]*
 func (r *TaskRepository) Update(ctx context.Context, task *model.Task) error {
 	query := `
 		UPDATE tasks
-		SET title = ?, description = ?, status = ?, assigned_to = ?, due_date = ?
+		SET title = ?, description = ?, status = ?, assignee_id = ?, due_date = ?
 		WHERE id = ?`
 
 	_, err := r.db.ExecContext(ctx, query,
@@ -167,14 +167,14 @@ func (r *TaskRepository) GetHistory(ctx context.Context, taskID uint64) ([]*mode
 
 func (r *TaskRepository) OtherTeamAssigneeTasks(ctx context.Context) ([]*model.OtherTeamAssigneeTask, error) {
 	query := `
-		SELECT ta.id, ta.team_id, ta.assigned_to, ta.title
+		SELECT ta.id, ta.team_id, ta.assignee_id, ta.title
 		FROM tasks ta
-		WHERE ta.assigned_to IS NOT NULL
+		WHERE ta.assignee_id IS NOT NULL
 		  AND NOT EXISTS (
 			  SELECT 1
 			  FROM team_members tm
 			  WHERE tm.team_id = ta.team_id
-			    AND tm.user_id = ta.assigned_to
+			    AND tm.user_id = ta.assignee_id
 		  )`
 
 	rows, err := r.db.QueryContext(ctx, query)

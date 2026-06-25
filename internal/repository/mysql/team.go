@@ -19,7 +19,7 @@ func NewTeamRepository(db *sql.DB) *TeamRepository {
 func (r *TeamRepository) Create(ctx context.Context, team *model.Team) error {
 	query := `
 		INSERT INTO teams (name, created_by)
-		VALUES (?, ?, ?)`
+		VALUES (?, ?)`
 
 	res, err := r.db.ExecContext(ctx, query, team.Name, team.CreatedBy)
 	if err != nil {

@@ -86,16 +86,16 @@ func (r *UserRepository) TopTaskCreatorsPerTeam(ctx context.Context) ([]*model.T
 				ROW_NUMBER() OVER (
 					PARTITION BY ta.team_id
 					ORDER BY COUNT(*) DESC
-				)                                                     AS rank
+				)                                                     AS user_rank
 			FROM tasks ta
 			JOIN users u ON u.id = ta.created_by
 			WHERE ta.created_at >= DATE_FORMAT(NOW(), '%Y-%m-01')
 			GROUP BY ta.team_id, ta.created_by, u.name
 		)
-		SELECT team_id, user_id, user_name, task_count, rank
+		SELECT team_id, user_id, user_name, task_count, user_rank
 		FROM task_counts
-		WHERE rank <= 3
-		ORDER BY team_id, rank`
+		WHERE user_rank <= 3
+		ORDER BY team_id, user_rank`
 
 	rows, err := r.db.QueryContext(ctx, query)
 	if err != nil {

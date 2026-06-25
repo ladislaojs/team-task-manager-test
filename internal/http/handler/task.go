@@ -121,9 +121,25 @@ func (h *TaskHandler) Update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// todo: history entries
+	updatedTask := service.UpdatedTask{
+		Title:       req.Title,
+		Description: req.Description,
+		AssigneeID:  req.AssigneeID,
+	}
+	if req.Status != nil {
+		s := model.TaskStatus(*req.Status)
+		updatedTask.Status = &s
+	}
+	if req.DueDate != nil {
+		t, err := time.Parse(time.RFC3339, *req.DueDate)
+		if err != nil {
+			response.Error(w, http.StatusBadRequest, "due_date must be RFC3339")
+			return
+		}
+		updatedTask.DueDate = &t
+	}
 
-	task, err := h.tasks.Update(r.Context(), claims.UserID, taskID)
+	task, err := h.tasks.Update(r.Context(), claims.UserID, taskID, updatedTask)
 	if err != nil {
 		switch {
 		case errors.Is(err, service.ErrTaskNotFound):

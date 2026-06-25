@@ -4,6 +4,8 @@ import (
 	"database/sql"
 	"fmt"
 	"time"
+
+	_ "github.com/go-sql-driver/mysql"
 )
 
 type Config struct {
@@ -15,7 +17,7 @@ type Config struct {
 }
 
 func Connect(config Config) (*sql.DB, error) {
-	dsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?parseTime=true", config.Host, config.Port, config.User, config.Password, config.Database)
+	dsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?parseTime=true", config.User, config.Password, config.Host, config.Port, config.Database)
 
 	db, err := sql.Open("mysql", dsn)
 	if err != nil {

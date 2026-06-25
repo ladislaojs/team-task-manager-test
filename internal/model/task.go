@@ -34,8 +34,8 @@ type TaskHistory struct {
 	ID        uint64
 	TaskID    uint64
 	Field     string
-	OldValue  string
-	NewValue  string
+	OldValue  *string
+	NewValue  *string
 	ChangedAt time.Time
 	ChangedBy uint64
 }

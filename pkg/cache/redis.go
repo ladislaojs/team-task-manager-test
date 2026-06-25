@@ -9,7 +9,7 @@ import (
 type Config struct {
 	Addr     string
 	Password string
-	DB       string
+	DB       int
 }
 
 func NewRedisClient(config Config) (*redis.Client, error) {

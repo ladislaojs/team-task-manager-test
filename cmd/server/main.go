@@ -7,7 +7,9 @@ import (
 	"strconv"
 
 	app "github.com/ladislaojs/team-task-manager-test/internal/http"
+	"github.com/ladislaojs/team-task-manager-test/internal/http/email"
 	"github.com/ladislaojs/team-task-manager-test/internal/http/handler"
+	"github.com/ladislaojs/team-task-manager-test/internal/repository/cached"
 	mysqlrepo "github.com/ladislaojs/team-task-manager-test/internal/repository/mysql"
 	"github.com/ladislaojs/team-task-manager-test/internal/service"
 	"github.com/ladislaojs/team-task-manager-test/pkg/cache"
@@ -32,30 +34,38 @@ func main() {
 	}
 	defer db.Close()
 
-	userRepository := mysqlrepo.NewUserRepository(db)
-	teamRepository := mysqlrepo.NewTeamRepository(db)
-	taskRepository := mysqlrepo.NewTaskRepository(db)
-
-	userService := service.NewUserService(userRepository, jwtSecret)
-	teamService := service.NewTeamService(teamRepository, userRepository)
-	taskService := service.NewTaskService(taskRepository)
-
-	userHandler := handler.NewUserHandler(userService)
-	teamHandler := handler.NewTeamHandler(teamService)
-	taskHandler := handler.NewTaskHandler(taskService)
+	redisDB, err := strconv.Atoi(os.Getenv("REDIS_DB"))
+	if err != nil {
+		redisDB = 0
+	}
 
 	redisClient, err := cache.NewRedisClient(cache.Config{
 		Addr:     os.Getenv("REDIS_ADDR"),
 		Password: os.Getenv("REDIS_PASSWORD"),
-		DB:       os.Getenv("REDIS_DB"),
+		DB:       redisDB,
 	})
 	if err != nil {
 		log.Fatalf("redis connection failed: %v", err)
 	}
 
+	userRepository := mysqlrepo.NewUserRepository(db)
+	teamRepository := mysqlrepo.NewTeamRepository(db)
+	taskRepository := mysqlrepo.NewTaskRepository(db)
+	cachedTaskRepository := cached.NewTaskRepository(taskRepository, redisClient)
+
+	mailer := email.NewCBService(email.NewMockMailer())
+
+	userService := service.NewUserService(userRepository, jwtSecret)
+	teamService := service.NewTeamService(teamRepository, userRepository, mailer)
+	taskService := service.NewTaskService(cachedTaskRepository, teamRepository)
+
+	userHandler := handler.NewUserHandler(userService)
+	teamHandler := handler.NewTeamHandler(teamService, userService)
+	taskHandler := handler.NewTaskHandler(taskService)
+
 	maxRequestsPerMinute, err := strconv.Atoi(os.Getenv("MAX_REQUESTS_PER_MINUTE"))
 	if err != nil {
-		maxRequestsPerMinute = 0
+		maxRequestsPerMinute = 100
 	}
 
 	router := app.NewRouter(
